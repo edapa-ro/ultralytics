@@ -18,25 +18,26 @@ eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
 pyenv shell 3.9.17
 
-# source venv/bin/activate
+source venv/bin/activate
 
-# if [ ! -d ${SAVE_MODEL_PATH} ]
-# then
-#     mkdir ${SAVE_MODEL_PATH}
-# fi
+if [ ! -d ${SAVE_MODEL_PATH} ]
+then
+    mkdir ${SAVE_MODEL_PATH}
+fi
 
-# python3 train.py \
-# --size ${SIZE} \
-# --data ${DATASET_YAML} \
-# --yaml ${YAML}
+python3 train.py \
+--size ${SIZE} \
+--data ${DATASET_YAML} \
+--yaml ${YAML}
 
-# python3 export.py \
-# --size ${SIZE} \
-# --data ${DATASET_YAML} \
-# --model ${MODEL}
+python3 export.py \
+--size ${SIZE} \
+--data ${DATASET_YAML} \
+--model ${MODEL}
 
-# deactivate
+deactivate
 source inference_venv/bin/activate
+
 edgetpu_compiler ${SAVE_MODEL_PATH}/${MODEL_NAME}_full_integer_quant.tflite
 cat ${MODEL_NAME}_full_integer_quant_edgetpu.log
 mv ${MODEL_NAME}.onnx ${MODEL_NAME}_full_integer_quant_edgetpu.log  ${MODEL_NAME}_full_integer_quant_edgetpu.tflite ${SAVE_MODEL_PATH}
@@ -46,5 +47,4 @@ python3 inference.py \
 --data ${DATASET_YAML}
  
 mv runs/detect/train  ${SAVE_MODEL_PATH}
-mv runs/detect/train/weights/best.pt ${SAVE_MODEL_PATH}/${MODEL}
-tensorboard --logdir ${SAVE_MODEL_PATH}/train
+mv ${SAVE_MODEL_PATH}/train/weights/best.pt ${SAVE_MODEL_PATH}/${MODEL}

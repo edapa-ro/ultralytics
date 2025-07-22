@@ -114,9 +114,9 @@ if (not os.path.isfile(data_yaml)) or (not data_yaml.endswith(".yaml")):
 
 with open(data_yaml, 'r') as f:
     data = yaml.load(f, Loader=yaml.SafeLoader)
-data_key = 'test' if 'test' in data.keys() else 'val'
+data_key = 'test' if ('test' in data.keys() and (not data['test'] == None))  else 'val'
 path = 'datasets/' + data['path'] + '/' + data[data_key]
-
+print(path)
 execute_testing(
     location=path,
     model_path=model_path

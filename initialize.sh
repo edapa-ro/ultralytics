@@ -24,6 +24,7 @@ source inference_venv/bin/activate
 pip3 install -r inference_requirements.txt
 pip3 install ultralytics
 pip3 install numpy==1.26.4
+pip3 install tensorflow 
 pip3 install tensorboard
 pip3 install tflite_runtime-2.5.0.post1-cp39-cp39-linux_x86_64.whl
 pip3 install pycoral-2.0.0-cp39-cp39-linux_x86_64.whl
