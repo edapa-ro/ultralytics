@@ -59,6 +59,11 @@ from .block import (
     ResNetLayer,
     SCDown,
     TorchVision,
+    Focuss,
+    CSP2,
+    CSP1,
+    AMAP,
+    AAM,
 )
 from .conv import (
     CBAM,

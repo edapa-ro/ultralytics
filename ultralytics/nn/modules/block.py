@@ -52,10 +52,11 @@ __all__ = (
     "PSA",
     "SCDown",
     "TorchVision",
-
-    "Focus",
+    "Focuss",
     "CSP2",
     "CSP1",
+    "AMAP",
+    "AAM",
 )
 
 
@@ -2097,7 +2098,7 @@ class CSP2(nn.Module):
         """Forward pass through the CSP bottleneck with 3 convolutions."""
         return self.cv3(self.leaky(self.bn(torch.cat([self.conv_up(self.cv2(self.cv1(x))), self.conv_down(x)], 1))))
     
-class Focus(nn.Module):
+class Focuss(nn.Module):
     def __init__(self, c1 : int, c2 : int, k : int = 3, s : int = 2, p : Optional[int] = None, g : int = 1, d : int=1, act : bool =True):
         super().__init__()
         self.c_ = 2
@@ -2105,8 +2106,8 @@ class Focus(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.conv1(torch.nn.functional.pixel_unshuffle(x, downscale_factor=self.c_))
-    
-class AAM(nn.Module):
+
+class AMAP(nn.Module):
     def __init__(self, c1 : int, h : int, w : int):
         super().__init__()
         beta = [0.1, 0.5, 0.4]
@@ -2136,3 +2137,23 @@ class AAM(nn.Module):
         val = torch.mul(self.conv_up(self.sigmoid(self.conv3x3(self.relu(self.conv(val))))), self.conv_down(val))
         x1, x2, x3 = torch.chunk(val, chunks=3, dim=1)
         return x1 + x2 + x3
+    
+class AAM(nn.Module):
+    def __init__(self, c1: int, c2: int):
+        """
+        Initialize the AAM module.
+
+        Args:
+            c1 (int): Input channels.
+            c2 (int): Output channels.
+            h (int): Height of the input feature map.
+            w (int): Width of the input feature map.
+        """
+        super().__init__()
+        self.convd3 = Conv(c1=c1, c2=c2, k=3, s=1, p=3, g=1, d=3)
+        self.convd5 = Conv(c1=c1, c2=c2, k=3, s=1, p=5, g=1, d=5)
+        self.convd7 = Conv(c1=c1, c2=c2, k=3, s=1, p=7, g=1, d=7)
+        self.average = torch.nn.AvgPool2d(kernel_size=3, stride=1, padding=1)
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.average(self.convd3(x) + self.convd5(x) + self.convd7(x))

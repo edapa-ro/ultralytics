@@ -68,6 +68,11 @@ from ultralytics.nn.modules import (
     YOLOEDetect,
     YOLOESegment,
     v10Detect,
+    Focuss,
+    CSP2,
+    CSP1,
+    AMAP,
+    AAM,
 )
 from ultralytics.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, YAML, colorstr, emojis
 from ultralytics.utils.checks import check_requirements, check_suffix, check_yaml
@@ -1644,6 +1649,12 @@ def parse_model(d, ch, verbose=True):
             SCDown,
             C2fCIB,
             A2C2f,
+            
+            CSP1,
+            CSP2,
+            AAM,
+            AMAP,
+            Focuss,
         }
     )
     repeat_modules = frozenset(  # modules with 'repeat' arguments
