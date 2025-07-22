@@ -8,10 +8,23 @@ echo -e 'eval "$(pyenv init --path)"\neval "$(pyenv init -)"' >> ~/.bashrc
 exec "$SHELL"
 pyenv install 3.9.17
 pyenv shell 3.9.17
+
+# First environment for training and exporting
 python3 -m venv venv
 source venv/bin/activate
 pip3 install -r requirements.txt
 pip3 install ultralytics
+yolo settings tensorboard=True
+yolo settings datasets_dir=./datasets weights_dir=./weights runs_dir=./runs
+
+# Second environment for inference
+deactivate
+python3 -m venv inference_venv
+source inference_venv/bin/activate
+pip3 install -r inference_requirements.txt
+pip3 install ultralytics
+pip3 install numpy==1.26.4
+pip3 install tensorboard
 pip3 install tflite_runtime-2.5.0.post1-cp39-cp39-linux_x86_64.whl
 pip3 install pycoral-2.0.0-cp39-cp39-linux_x86_64.whl
 yolo settings tensorboard=True
