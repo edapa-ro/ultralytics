@@ -9,7 +9,7 @@ import torch.nn.functional as F
 
 from ultralytics.utils.torch_utils import fuse_conv_and_bn
 
-from .conv import Conv, DWConv, GhostConv, LightConv, RepConv, autopad
+from .conv import Conv, DWConv, GhostConv, LightConv, RepConv, Concat, autopad
 from .transformer import TransformerBlock
 
 __all__ = (
@@ -52,6 +52,10 @@ __all__ = (
     "PSA",
     "SCDown",
     "TorchVision",
+
+    "Focus",
+    "CSP2",
+    "CSP1",
 )
 
 
@@ -288,6 +292,7 @@ class C2(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through the CSP bottleneck with 2 convolutions."""
         a, b = self.cv1(x).chunk(2, 1)
+        print(a.shape, b.shape)
         return self.cv2(torch.cat((self.m(a), b), 1))
 
 
@@ -2031,3 +2036,103 @@ class SAVPE(nn.Module):
         aggregated = score.transpose(-2, -3) @ x.reshape(B, self.c, C // self.c, -1).transpose(-1, -2)
 
         return F.normalize(aggregated.transpose(-2, -3).reshape(B, Q, -1), dim=-1, p=2)
+    
+class CSP1(nn.Module):
+    """CSP Bottleneck with 3 convolutions."""
+
+    def __init__(self, c1: int, c2: int, n: int = 1, shortcut: bool = True, g: int = 1, e: float = 0.5):
+        """
+        Initialize the CSP Bottleneck with 3 convolutions.
+
+        Args:
+            c1 (int): Input channels.
+            c2 (int): Output channels.
+            n (int): Number of Bottleneck blocks.
+            shortcut (bool): Whether to use shortcut connections.
+            g (int): Groups for convolutions.
+            e (float): Expansion ratio.
+        """
+        super().__init__()
+        c_ = int(c2 * e)  # hidden channels
+        self.cv1 = Conv(c1, c_, 1, 1)
+        self.m = nn.Sequential(*(Bottleneck(c_, c_, shortcut, g, k=((1, 1), (3, 3)), e=1.0) for _ in range(n)))
+        self.conv_up = torch.nn.Conv2d(c_, c_, 1, 1)
+        self.conv_down = torch.nn.Conv2d(c1, c_, 1, 1)
+
+        self.bn = torch.nn.BatchNorm2d(2 * c_)
+        self.leaky = torch.nn.LeakyReLU()
+        self.cv3 = Conv(2 * c_, c2, 1) 
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass through the CSP bottleneck with 3 convolutions."""
+        return self.cv3(self.leaky(self.bn(torch.cat([ self.conv_up(self.m(self.cv1(x))), self.conv_down(x) ], 1))))
+
+    
+class CSP2(nn.Module):
+    """CSP Bottleneck with 3 convolutions."""
+
+    def __init__(self, c1: int, c2: int, g: int = 1, e: float = 0.5):
+        """
+        Initialize the CSP Bottleneck with 3 convolutions.
+
+        Args:
+            c1 (int): Input channels.
+            c2 (int): Output channels.
+            n (int): Number of Bottleneck blocks.
+            shortcut (bool): Whether to use shortcut connections.
+            g (int): Groups for convolutions.
+            e (float): Expansion ratio.
+        """
+        super().__init__()
+        c_ = int(c2 * e)  # hidden channels
+        self.cv1 = Conv(c1, c_, 1, 1, g=g)
+        self.cv2 = Conv(c_, c_, 1, 1, g=g)
+        self.conv_up = Conv(c_, c_, 3, 1)
+        self.conv_down = Conv(c1, c_, 3, 1)
+        self.bn = torch.nn.BatchNorm2d(2 * c_)
+        self.leaky = torch.nn.LeakyReLU()
+        self.cv3 = Conv(2 * c_, c2, 1, g=g)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass through the CSP bottleneck with 3 convolutions."""
+        return self.cv3(self.leaky(self.bn(torch.cat([self.conv_up(self.cv2(self.cv1(x))), self.conv_down(x)], 1))))
+    
+class Focus(nn.Module):
+    def __init__(self, c1 : int, c2 : int, k : int = 3, s : int = 2, p : Optional[int] = None, g : int = 1, d : int=1, act : bool =True):
+        super().__init__()
+        self.c_ = 2
+        self.conv1 = Conv(self.c_ * self.c_ * c1, c2, k, s, p, g, d, act)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.conv1(torch.nn.functional.pixel_unshuffle(x, downscale_factor=self.c_))
+    
+class AAM(nn.Module):
+    def __init__(self, c1 : int, h : int, w : int):
+        super().__init__()
+        beta = [0.1, 0.5, 0.4]
+        self.size = (c1, h, w)
+        c_ = 3 * c1
+        self.attention = torch.zeros(size=(c1, h, w))
+        self.addapt1 = torch.nn.AdaptiveAvgPool2d(output_size=(int(beta[0] * h), int(beta[0] * w)))
+        self.addapt2 = torch.nn.AdaptiveAvgPool2d(output_size=(int(beta[1] * h), int(beta[1] * w)))
+        self.addapt3 = torch.nn.AdaptiveAvgPool2d(output_size=(int(beta[2] * h), int(beta[2] * w)))
+        self.conv1x1 = torch.nn.Conv2d(in_channels=c_, out_channels=c_, kernel_size=1, stride=1, padding=1)
+        self.relu = torch.nn.ReLU(inplace=True)
+        self.conv3x3 = torch.nn.Conv2d(in_channels=c_, out_channels=c_, kernel_size=3, stride=1, padding=1)
+        self.sigmoid = torch.nn.Sigmoid()
+        self.conv_up = Conv(c1=c_, c2=c_, k=1, s=1)
+        self.conv_down = Conv(c1=c_, c2=c_, k=1, s=1)
+        self.concat = Concat(dimension=1)
+        self.conv = Conv(c1=c_, c2=c_)
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        up = self.addapt1(x)
+        middle = self.addapt2(x)
+        down = self.addapt3(x)
+        up = torch.nn.functional.interpolate(up, x.shape[2:])
+        middle = torch.nn.functional.interpolate(middle, x.shape[2:])
+        down = torch.nn.functional.interpolate(down, x.shape[2:])
+        val = self.concat([up, middle, down])
+        val = torch.mul(self.conv_up(self.sigmoid(self.conv3x3(self.relu(self.conv(val))))), self.conv_down(val))
+        x1, x2, x3 = torch.chunk(val, chunks=3, dim=1)
+        return x1 + x2 + x3

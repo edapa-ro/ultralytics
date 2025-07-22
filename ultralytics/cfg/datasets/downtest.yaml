@@ -1,0 +1,9 @@
+path: downtest
+train: images/train
+val: images/val
+test: images/test
+
+names:
+  0: persoana
+
+download: https://drive.usercontent.google.com/open?id=1RRPCFvVwUsn4LNwaTjPBRXASgo2_WacK&authuser=0
