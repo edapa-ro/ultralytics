@@ -2038,6 +2038,7 @@ class CSP1(nn.Module):
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
         self.cv1 = Conv(c1, c_, 1, 1)
+        self.c2 = c2
         self.m = nn.Sequential(*(Bottleneck(c_, c_, shortcut, g, k=((1, 1), (3, 3)), e=1.0) for _ in range(n)))
         self.conv_up = Conv(c1=c_, c2=c_, k=1, s=1)
         self.conv_down = Conv(c1=c1, c2=c_, k=1, s=1)
@@ -2046,28 +2047,16 @@ class CSP1(nn.Module):
         self.concat = Concat(dimension=1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # print("CSP1", x.shape)
+        print("CSP1", self.c2, x.shape)
         list_x = self.concat([self.conv_up(self.m(self.cv1(x))), self.conv_down(x)])
         return self.cv3(self.conv_total(list_x))
 
     
 class CSP2(nn.Module):
-    """CSP Bottleneck with 3 convolutions."""
-
     def __init__(self, c1: int, c2: int, g: int = 1, e: float = 0.5):
-        """
-        Initialize the CSP Bottleneck with 3 convolutions.
-
-        Args:
-            c1 (int): Input channels.
-            c2 (int): Output channels.
-            n (int): Number of Bottleneck blocks.
-            shortcut (bool): Whether to use shortcut connections.
-            g (int): Groups for convolutions.
-            e (float): Expansion ratio.
-        """
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
+        self.c2 = c2
         self.cv1 = Conv(c1=c1, c2=c_, k=1, s=1, g=g)
         self.cv2 = Conv(c1=c_, c2=c_, k=1, s=1, g=g)
         self.conv_up = Conv(c1=c_, c2=c_, k=3, s=1)
@@ -2077,7 +2066,7 @@ class CSP2(nn.Module):
         self.concat = Concat(dimension=1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # print("CSP2", x.shape)
+        print("CSP2", self.c2, x.shape)
         list_x = [self.conv_up(self.cv2(self.cv1(x))), self.conv_down(x)]
         return self.cv3(self.conv_total(self.concat(list_x)))
     
@@ -2135,25 +2124,27 @@ class AMAP(nn.Module):
 class AAM(nn.Module):
     def __init__(self, c1: int, c2: int):
         super().__init__()
+        self.c2 = c2
         self.convd3 = Conv(c1=c1, c2=c2, k=3, s=1, p=None, g=1, d=3)
         self.convd5 = Conv(c1=c1, c2=c2, k=3, s=1, p=None, g=1, d=5)
         self.convd7 = Conv(c1=c1, c2=c2, k=3, s=1, p=None, g=1, d=7)
         self.average = torch.nn.AvgPool2d(kernel_size=3, stride=1, padding=1)
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # print("AAM", x.shape)
+        print("AAM", self.c2, x.shape)
         return self.average(self.convd3(x) + self.convd5(x) + self.convd7(x))
     
 class Debug_Conv(nn.Module):
     default_act = nn.SiLU()  # default activation
     def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1, act=True):
         super().__init__()
+        self.c2 = c2
         self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p, d), groups=g, dilation=d, bias=False)
         self.bn = nn.BatchNorm2d(c2)
         self.act = self.default_act if act is True else act if isinstance(act, nn.Module) else nn.Identity()
 
     def forward(self, x):
-        # print("Debug Conv", x.shape)
+        print("Debug Conv", self.c2, x.shape)
         return self.act(self.bn(self.conv(x)))
 
     def forward_fuse(self, x):
@@ -2165,8 +2156,8 @@ class Debug_Concat(nn.Module):
         self.d = dimension
 
     def forward(self, x: List[torch.Tensor]):
-        # print("concat ", end=" ")
-        # for t in x:
-        #     print(t.shape, end=" ")
-        # print()
+        print("concat ", end=" ")
+        for t in x:
+            print(t.shape, end=" ")
+        print()
         return torch.cat(x, self.d)

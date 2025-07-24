@@ -1653,12 +1653,12 @@ def parse_model(d, ch, verbose=True):
             C2fCIB,
             A2C2f,
             
-            CSP1,
-            CSP2,
             AAM,
             AMAP,
             Focuss,
             Debug_Conv,
+            CSP1,
+            CSP2,
         }
     )
     repeat_modules = frozenset(  # modules with 'repeat' arguments
@@ -1681,6 +1681,7 @@ def parse_model(d, ch, verbose=True):
         }
     )
     for i, (f, n, m, args) in enumerate(d["backbone"] + d["head"]):  # from, number, module, args
+        print(f, n, m, args, width)
         m = (
             getattr(torch.nn, m[3:])
             if "nn." in m
@@ -1763,6 +1764,7 @@ def parse_model(d, ch, verbose=True):
         if i == 0:
             ch = []
         ch.append(c2)
+    print()
     return torch.nn.Sequential(*layers), sorted(save)
 
 
