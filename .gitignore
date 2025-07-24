@@ -137,6 +137,7 @@ res/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+out.txt
 
 # Pyre type checker
 .pyre/

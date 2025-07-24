@@ -19,7 +19,6 @@ eval "$(pyenv init -)"
 pyenv shell 3.9.17
 
 source venv/bin/activate
-
 if [ ! -d ${SAVE_MODEL_PATH} ]
 then
     mkdir ${SAVE_MODEL_PATH}
@@ -34,12 +33,11 @@ python3 export.py \
 --size ${SIZE} \
 --data ${DATASET_YAML} \
 --model ${MODEL}
-
 deactivate
+
 source inference_venv/bin/activate
 
-edgetpu_compiler ${SAVE_MODEL_PATH}/${MODEL_NAME}_full_integer_quant.tflite
-cat ${MODEL_NAME}_full_integer_quant_edgetpu.log
+edgetpu_compiler -s ${SAVE_MODEL_PATH}/${MODEL_NAME}_full_integer_quant.tflite
 mv ${MODEL_NAME}.onnx ${MODEL_NAME}_full_integer_quant_edgetpu.log  ${MODEL_NAME}_full_integer_quant_edgetpu.tflite ${SAVE_MODEL_PATH}
 
 python3 inference.py \

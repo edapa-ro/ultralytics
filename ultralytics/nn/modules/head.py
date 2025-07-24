@@ -112,7 +112,12 @@ class Detect(nn.Module):
             self.one2one_cv3 = copy.deepcopy(self.cv3)
 
     def forward(self, x: List[torch.Tensor]) -> Union[List[torch.Tensor], Tuple]:
-        """Concatenate and return predicted bounding boxes and class probabilities."""
+
+        # print("detect ", end=" ")
+        # for t in x:
+        #     print(t.shape, end=" ")
+        # print(end="\n\n\n")
+
         if self.end2end:
             return self.forward_end2end(x)
 

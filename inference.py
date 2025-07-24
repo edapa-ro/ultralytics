@@ -103,13 +103,13 @@ args = parser.parse_args()
 model_path = args.model
 data_yaml = args.data 
 if (model_path == None):
-    print("NU A FOST TRANSMIS MODELUL CA PARAMETRU")
+    print("NU A FOST TRANSMIS MODELUL CA PARAMETRU PENTRU INFERENCE")
     exit(1)
 if (not os.path.isfile(model_path)) or (not model_path.endswith(".tflite")):
-    print("FISIERUL TRANSMIS CA PARAMETRU PENTRU MODEL NU ESTE VALID")
+    print("FISIERUL TRANSMIS CA PARAMETRU PENTRU MODEL NU ESTE VALID PENTRU INFERENCE")
     exit(1)
 if (not os.path.isfile(data_yaml)) or (not data_yaml.endswith(".yaml")):
-    print("FISIERUL TRANSMIS PENTRU SETUL DE DATE NU ESTE VALID")
+    print("FISIERUL TRANSMIS PENTRU SETUL DE DATE NU ESTE VALID PENTRU INFERENCE")
     exit(1)
 
 with open(data_yaml, 'r') as f:

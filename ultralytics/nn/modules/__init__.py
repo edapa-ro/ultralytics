@@ -64,6 +64,8 @@ from .block import (
     CSP1,
     AMAP,
     AAM,
+    Debug_Conv,
+    Debug_Concat,
 )
 from .conv import (
     CBAM,
@@ -184,4 +186,12 @@ __all__ = (
     "TorchVision",
     "Index",
     "A2C2f",
+    
+    "Focuss",
+    "CSP2",
+    "CSP1",
+    "AMAP",
+    "AAM",
+    "Debug_Conv",
+    "Debug_Concat",
 )

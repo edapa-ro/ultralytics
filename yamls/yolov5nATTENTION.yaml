@@ -1,55 +1,51 @@
 # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
 
 # Parameters
-nc: 10 # number of classes
-scales: # model compound scaling constants, i.e. 'model=yolov5n.yaml' will call yolov5.yaml with scale 'n'
-  # [depth, width, max_channels]
+nc: 10  # number of classes
+scales:  # model compound scaling constants
   n: [0.33, 0.25, 1024]
   s: [0.33, 0.50, 1024]
   m: [0.67, 0.75, 1024]
   l: [1.00, 1.00, 1024]
   x: [1.33, 1.25, 1024]
 
-
 # YOLOv5 v6.0 backbone
 backbone:
-  # [from, number, module, args]
   [
-    [-1, 1, Focuss, [16,   3,  2]], 
-    [-1, 1, CSP1,  [32,   1    ]],
-    [-1, 1, Conv,  [64,   3,  2]],
-    [-1, 1, CSP1,  [128,  2    ]],
-    [-1, 1, Conv,  [128,  3,  2]], 
-    [-1, 1, CSP1,  [256,  3    ]],
-    [-1, 1, Conv,  [256,  3,  2]], 
-    [-1, 1, SPP,   [512        ]],
-    [-1, 1, CSP2,  [1024        ]],
-    [-1, 1, Conv,  [512, 3,  2]],
-    [-1, 1, AAM,   [256        ]],
-    [[-1, 5], 1, Concat,     [1]],
-    [-1, 1, CSP2,  [128,       ]],
-    [-1, 1, Conv,  [128,       ]],
-    [-1, 1, AMAP,  [100, 100]],
-    [[-1, 3], 1, Concat,    [1]],
+    [-1, 1, Debug_Conv,        [4, 3, 2]],      # 0
+    [-1, 1, CSP1,              [8, 1, 2]],      # 1
+    [-1, 1, Debug_Conv,        [8,  3, 2]],     # 2
+    [-1, 1, CSP1,              [16, 2, 2]],     # 3
+    [-1, 1, Debug_Conv,        [16, 3, 1]],     # 4
+    [-1, 1, CSP1,              [32, 3, 1]],     # 5
+    [-1, 1, AAM,               [32]],
+    [-1, 1, Debug_Conv,        [64, 3, 1]],     # 6
+    [-1, 1, SPP,               [64]],           # 7
+    [-1, 1, CSP2,              [128]],          # 8
+    [-1, 1, Debug_Conv,        [128, 3, 1]],    # 9
+    [-1, 1, AAM,               [256]],          # 10
+    [[-1, 5], 1, Debug_Concat, [1]],            # 11
+    [-1, 1, CSP2,              [256]],          # 12
+    [-1, 1, Debug_Conv,        [128, 3, 1]],    # 13
+    # [-1, 1, AMAP,   []],                      # 14
+    [[-1, 3], 1, Debug_Concat,       [1]],            # 15
   ]
 
-  # 15 straturi in backbone
-
 # YOLOv5 v6.0 head
-head: [
-    [-1, 1, CSP2,  [128        ]],
-    [-1, 1, Conv,  [256, 3, 2  ]],
+head:
+  [
+    [-1, 1, CSP2,         [128]],             # 16
+    [-1, 1, Debug_Conv,   [128, 3, 1]],       # 17
 
-    [16, 1, Conv,  [256, 3, 2  ]],
-    [[-1, 15], 1, Concat, [1]],
-    [-1, 1, CSP2, [256]],
-    [1, 1,  Conv,  [256, 3, 2]],
+    [-1, 1, Debug_Conv,   [128, 3, 1]],       # 18
+    [[-1, 15], 1, Debug_Concat, [1]],               # 19
+    [-1, 1, CSP2,         [128]],             # 20
+    [-1, 1, Debug_Conv,   [128, 3, 1]],       # 21
 
-    [20, 1, Conv, [256, 3, 2]],
-    [[-1, 11], 1, Concat, [1]],
-    [-1, 1, CSP2, [256]],
-    [-1, 1, Conv, [256, 3, 2]],
+    [-1, 1, Debug_Conv,   [128, 3, 1]],       # 22
+    [[-1, 11], 1, Debug_Concat, [1]],               # 23
+    [-1, 1, CSP2,         [128]],             # 24
+    [-1, 1, Debug_Conv,   [128, 3, 1]],       # 25
 
-    
-    [[17, 21, 25], 1, Detect, [nc]],
+    [[17, 21, 25], 1, Detect, [nc]]           # 26
   ]

@@ -57,6 +57,7 @@ __all__ = (
     "CSP1",
     "AMAP",
     "AAM",
+    "Debug_Conv",
 )
 
 
@@ -293,7 +294,6 @@ class C2(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through the CSP bottleneck with 2 convolutions."""
         a, b = self.cv1(x).chunk(2, 1)
-        print(a.shape, b.shape)
         return self.cv2(torch.cat((self.m(a), b), 1))
 
 
@@ -1558,7 +1558,6 @@ class C2fPSA(C2f):
         >>> model = C2fPSA(c1=64, c2=64, n=3, e=0.5)
         >>> x = torch.randn(1, 64, 128, 128)
         >>> output = model(x)
-        >>> print(output.shape)
     """
 
     def __init__(self, c1: int, c2: int, n: int = 1, e: float = 0.5):
@@ -1596,7 +1595,6 @@ class SCDown(nn.Module):
         >>> model = SCDown(c1=64, c2=128, k=3, s=2)
         >>> x = torch.randn(1, 64, 128, 128)
         >>> y = model(x)
-        >>> print(y.shape)
         torch.Size([1, 128, 64, 64])
     """
 
@@ -1714,7 +1712,6 @@ class AAttn(nn.Module):
         >>> attn = AAttn(dim=256, num_heads=8, area=4)
         >>> x = torch.randn(1, 256, 32, 32)
         >>> output = attn(x)
-        >>> print(output.shape)
         torch.Size([1, 256, 32, 32])
     """
 
@@ -1798,7 +1795,6 @@ class ABlock(nn.Module):
         >>> block = ABlock(dim=256, num_heads=8, mlp_ratio=1.2, area=1)
         >>> x = torch.randn(1, 256, 32, 32)
         >>> output = block(x)
-        >>> print(output.shape)
         torch.Size([1, 256, 32, 32])
     """
 
@@ -1866,7 +1862,6 @@ class A2C2f(nn.Module):
         >>> m = A2C2f(512, 512, n=1, a2=True, area=1)
         >>> x = torch.randn(1, 512, 32, 32)
         >>> output = m(x)
-        >>> print(output.shape)
         torch.Size([1, 512, 32, 32])
     """
 
@@ -2039,34 +2034,21 @@ class SAVPE(nn.Module):
         return F.normalize(aggregated.transpose(-2, -3).reshape(B, Q, -1), dim=-1, p=2)
     
 class CSP1(nn.Module):
-    """CSP Bottleneck with 3 convolutions."""
-
-    def __init__(self, c1: int, c2: int, n: int = 1, shortcut: bool = True, g: int = 1, e: float = 0.5):
-        """
-        Initialize the CSP Bottleneck with 3 convolutions.
-
-        Args:
-            c1 (int): Input channels.
-            c2 (int): Output channels.
-            n (int): Number of Bottleneck blocks.
-            shortcut (bool): Whether to use shortcut connections.
-            g (int): Groups for convolutions.
-            e (float): Expansion ratio.
-        """
+    def __init__(self, c1: int, c2: int, n: int = 1, s : int = 1, shortcut: bool = True, g: int = 1, e: float = 0.5):
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
         self.cv1 = Conv(c1, c_, 1, 1)
         self.m = nn.Sequential(*(Bottleneck(c_, c_, shortcut, g, k=((1, 1), (3, 3)), e=1.0) for _ in range(n)))
-        self.conv_up = torch.nn.Conv2d(c_, c_, 1, 1)
-        self.conv_down = torch.nn.Conv2d(c1, c_, 1, 1)
-
-        self.bn = torch.nn.BatchNorm2d(2 * c_)
-        self.leaky = torch.nn.LeakyReLU()
-        self.cv3 = Conv(2 * c_, c2, 1) 
+        self.conv_up = Conv(c1=c_, c2=c_, k=1, s=1)
+        self.conv_down = Conv(c1=c1, c2=c_, k=1, s=1)
+        self.conv_total = Conv(c1=2 * c_, c2=2 * c_, k=1, s=1)
+        self.cv3 = Conv(c1=2 * c_, c2=c2, k=1, s = s) 
+        self.concat = Concat(dimension=1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass through the CSP bottleneck with 3 convolutions."""
-        return self.cv3(self.leaky(self.bn(torch.cat([ self.conv_up(self.m(self.cv1(x))), self.conv_down(x) ], 1))))
+        # print("CSP1", x.shape)
+        list_x = self.concat([self.conv_up(self.m(self.cv1(x))), self.conv_down(x)])
+        return self.cv3(self.conv_total(list_x))
 
     
 class CSP2(nn.Module):
@@ -2086,74 +2068,105 @@ class CSP2(nn.Module):
         """
         super().__init__()
         c_ = int(c2 * e)  # hidden channels
-        self.cv1 = Conv(c1, c_, 1, 1, g=g)
-        self.cv2 = Conv(c_, c_, 1, 1, g=g)
-        self.conv_up = Conv(c_, c_, 3, 1)
-        self.conv_down = Conv(c1, c_, 3, 1)
-        self.bn = torch.nn.BatchNorm2d(2 * c_)
-        self.leaky = torch.nn.LeakyReLU()
-        self.cv3 = Conv(2 * c_, c2, 1, g=g)
+        self.cv1 = Conv(c1=c1, c2=c_, k=1, s=1, g=g)
+        self.cv2 = Conv(c1=c_, c2=c_, k=1, s=1, g=g)
+        self.conv_up = Conv(c1=c_, c2=c_, k=3, s=1)
+        self.conv_down = Conv(c1=c1, c2=c_, k=3, s=1)
+        self.conv_total = Conv(c1=2 *c_, c2= 2*c_, k=3, s=1)
+        self.cv3 = Conv(c1=2 * c_, c2=c2, k=1, s=1, g=g)
+        self.concat = Concat(dimension=1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass through the CSP bottleneck with 3 convolutions."""
-        return self.cv3(self.leaky(self.bn(torch.cat([self.conv_up(self.cv2(self.cv1(x))), self.conv_down(x)], 1))))
+        # print("CSP2", x.shape)
+        list_x = [self.conv_up(self.cv2(self.cv1(x))), self.conv_down(x)]
+        return self.cv3(self.conv_total(self.concat(list_x)))
     
 class Focuss(nn.Module):
-    def __init__(self, c1 : int, c2 : int, k : int = 3, s : int = 2, p : Optional[int] = None, g : int = 1, d : int=1, act : bool =True):
+    def __init__(self, c1 : int, c2 : int, k : int = 1, s : int = 1, p : Optional[int] = None, g : int = 1, d : int=1, act : bool =True):
         super().__init__()
         self.c_ = 2
         self.conv1 = Conv(self.c_ * self.c_ * c1, c2, k, s, p, g, d, act)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.conv1(torch.nn.functional.pixel_unshuffle(x, downscale_factor=self.c_))
+    def pixel_unshuffle(self, x, downscale_factor):
+        b, c, h, w = x.shape
+        # assert h % downscale_factor == 0 and w % downscale_factor == 0
+        x = x.view(b, c, h // downscale_factor, downscale_factor, w // downscale_factor, downscale_factor)
+        x = x.permute(0, 1, 3, 5, 2, 4)
+        x = x.reshape(b, c * (downscale_factor ** 2), h // downscale_factor, w // downscale_factor)
+        return x
 
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.conv1(self.pixel_unshuffle(x, self.c_))
+
+
+# AMAP LAYER SOTO E PROBLEMA
 class AMAP(nn.Module):
-    def __init__(self, c1 : int, h : int, w : int):
+    def __init__(self, c1 : int):
         super().__init__()
         beta = [0.1, 0.5, 0.4]
-        self.size = (c1, h, w)
         c_ = 3 * c1
-        self.attention = torch.zeros(size=(c1, h, w))
-        self.addapt1 = torch.nn.AdaptiveAvgPool2d(output_size=(int(beta[0] * h), int(beta[0] * w)))
-        self.addapt2 = torch.nn.AdaptiveAvgPool2d(output_size=(int(beta[1] * h), int(beta[1] * w)))
-        self.addapt3 = torch.nn.AdaptiveAvgPool2d(output_size=(int(beta[2] * h), int(beta[2] * w)))
-        self.conv1x1 = torch.nn.Conv2d(in_channels=c_, out_channels=c_, kernel_size=1, stride=1, padding=1)
-        self.relu = torch.nn.ReLU(inplace=True)
-        self.conv3x3 = torch.nn.Conv2d(in_channels=c_, out_channels=c_, kernel_size=3, stride=1, padding=1)
-        self.sigmoid = torch.nn.Sigmoid()
+        self.addapt1 = torch.nn.Upsample(scale_factor=beta[0], mode='nearest')
+        self.addapt2 = torch.nn.Upsample(scale_factor=beta[1], mode='nearest')
+        self.addapt3 = torch.nn.Upsample(scale_factor=beta[2], mode='nearest')
+        # self.addapt1 = torch.nn.UpsamplingNearest2d(size=(int(beta[0] * h), int(beta[0] * w)))
+        # self.addapt2 = torch.nn.UpsamplingNearest2d(size=(int(beta[1] * h), int(beta[1] * w)))
+        # self.addapt3 = torch.nn.UpsamplingNearest2d(size=(int(beta[2] * h), int(beta[2] * w)))
+        # self.addapt1 = torch.nn.AdaptiveAvgPool2d(output_size=(int(beta[0] * h), int(beta[0] * w)))
+        # self.addapt2 = torch.nn.AdaptiveAvgPool2d(output_size=(int(beta[1] * h), int(beta[1] * w)))
+        # self.addapt3 = torch.nn.AdaptiveAvgPool2d(output_size=(int(beta[2] * h), int(beta[2] * w)))
+        self.conv1x1 = Conv(c1=c_, c2=c_, k=1, s=1, p=0, d=1)
+        self.conv3x3 = Conv(c1=c_, c2=c_, k=3, s=1, p=1, d=1, act=nn.ReLU()) 
         self.conv_up = Conv(c1=c_, c2=c_, k=1, s=1)
         self.conv_down = Conv(c1=c_, c2=c_, k=1, s=1)
         self.concat = Concat(dimension=1)
         self.conv = Conv(c1=c_, c2=c_)
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        up = self.addapt1(x)
-        middle = self.addapt2(x)
-        down = self.addapt3(x)
-        up = torch.nn.functional.interpolate(up, x.shape[2:])
-        middle = torch.nn.functional.interpolate(middle, x.shape[2:])
-        down = torch.nn.functional.interpolate(down, x.shape[2:])
+        up = torch.nn.functional.interpolate(self.addapt1(x), x.shape[2:])
+        middle = torch.nn.functional.interpolate(self.addapt2(x), x.shape[2:])
+        down = torch.nn.functional.interpolate(self.addapt3(x), x.shape[2:])
         val = self.concat([up, middle, down])
-        val = torch.mul(self.conv_up(self.sigmoid(self.conv3x3(self.relu(self.conv(val))))), self.conv_down(val))
+        up_side = self.conv_up(self.conv3x3(self.conv1x1(val)))
+        val = torch.mul(up_side, self.conv_down(val))
+        # AICI S-AR PUTEA SA FIE O PROBLEMA
         x1, x2, x3 = torch.chunk(val, chunks=3, dim=1)
         return x1 + x2 + x3
     
 class AAM(nn.Module):
     def __init__(self, c1: int, c2: int):
-        """
-        Initialize the AAM module.
-
-        Args:
-            c1 (int): Input channels.
-            c2 (int): Output channels.
-            h (int): Height of the input feature map.
-            w (int): Width of the input feature map.
-        """
         super().__init__()
-        self.convd3 = Conv(c1=c1, c2=c2, k=3, s=1, p=3, g=1, d=3)
-        self.convd5 = Conv(c1=c1, c2=c2, k=3, s=1, p=5, g=1, d=5)
-        self.convd7 = Conv(c1=c1, c2=c2, k=3, s=1, p=7, g=1, d=7)
+        self.convd3 = Conv(c1=c1, c2=c2, k=3, s=1, p=None, g=1, d=3)
+        self.convd5 = Conv(c1=c1, c2=c2, k=3, s=1, p=None, g=1, d=5)
+        self.convd7 = Conv(c1=c1, c2=c2, k=3, s=1, p=None, g=1, d=7)
         self.average = torch.nn.AvgPool2d(kernel_size=3, stride=1, padding=1)
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # print("AAM", x.shape)
         return self.average(self.convd3(x) + self.convd5(x) + self.convd7(x))
+    
+class Debug_Conv(nn.Module):
+    default_act = nn.SiLU()  # default activation
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1, act=True):
+        super().__init__()
+        self.conv = nn.Conv2d(c1, c2, k, s, autopad(k, p, d), groups=g, dilation=d, bias=False)
+        self.bn = nn.BatchNorm2d(c2)
+        self.act = self.default_act if act is True else act if isinstance(act, nn.Module) else nn.Identity()
+
+    def forward(self, x):
+        # print("Debug Conv", x.shape)
+        return self.act(self.bn(self.conv(x)))
+
+    def forward_fuse(self, x):
+        return self.act(self.conv(x))
+    
+class Debug_Concat(nn.Module):
+    def __init__(self, dimension=1):
+        super().__init__()
+        self.d = dimension
+
+    def forward(self, x: List[torch.Tensor]):
+        # print("concat ", end=" ")
+        # for t in x:
+        #     print(t.shape, end=" ")
+        # print()
+        return torch.cat(x, self.d)

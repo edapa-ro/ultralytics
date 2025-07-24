@@ -56,7 +56,7 @@ if model == None:
 print("SE INCEPE ACUM ANTRENAREA")
 model.train(
     data=data_yaml,
-    epochs=20,
+    epochs=6,
     imgsz=size,
     batch=4,
     save_period=3,
