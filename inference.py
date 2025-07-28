@@ -14,7 +14,7 @@ if (len(list_edge_tpus()) == 0):
     print("NU ESTE CONECTAT USB GOOGLE CORAL LA LAPTOP")
     exit(1)
 print(list_edge_tpus())
-
+SIZE=1024
 
 labels = ["pedestrian", "people", "bicycle", "car", "van", "truck", "tricycle", "awning-tricycle", "bus", "motor"]
 
@@ -62,7 +62,7 @@ def execute_testing(location, model_path, conf_thres = 0.15, iou_thres = 0.15):
     prediction=None 
     for filename in filenames:
         img_path = location + "/" + filename 
-        img = Image.open(img_path).resize((1024, 1024)).convert("RGB")
+        img = Image.open(img_path).resize((SIZE, SIZE)).convert("RGB")
         img_array = np.expand_dims(np.array(img), axis=0)  # Add batch dimension
         x = img_array.astype('float32') / 255.0
         x = (x / input_scale) + input_zero
@@ -85,7 +85,7 @@ def execute_testing(location, model_path, conf_thres = 0.15, iou_thres = 0.15):
             cls_id = int(nms_result[0][i][5])
             conf = int(nms_result[0][i][4] * 100)
             label = f"{labels[cls_id]} {conf}%"
-            plot_one_box_pil(nms_result[0][i][:4], img, label=label, line_width=2, size=1024)
+            plot_one_box_pil(nms_result[0][i][:4], img, label=label, line_width=2, size=SIZE)
 
         # Save result
         output_path = "res/drawn-" + filename 
