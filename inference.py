@@ -16,28 +16,37 @@ if (len(list_edge_tpus()) == 0):
 print(list_edge_tpus())
 SIZE=1024
 
-labels = ["pedestrian", "people", "bicycle", "car", "van", "truck", "tricycle", "awning-tricycle", "bus", "motor"]
 
 
-def plot_one_box_pil(box, image, label=None, color=(255, 0, 0), line_width=3, size=640):
-    draw = ImageDraw.Draw(image)
-    c1 = (int(box[0] * size), int(box[1] * size))
-    c2 = (int(box[2] * size), int(box[3] * size))
-    draw.rectangle([c1, c2], outline=color, width=line_width)
+# def plot_one_box_pil(box, image, label=None, color=(255, 0, 0), line_width=3, size=640):
+#     draw = ImageDraw.Draw(image)
+#     c1 = (int(box[0] * size), int(box[1] * size))
+#     c2 = (int(box[2] * size), int(box[3] * size))
+#     draw.rectangle([c1, c2], outline=color, width=line_width)
     
-    if label:
-        font = ImageFont.load_default()
-        text_bbox = draw.textbbox((0, 0), label, font=font)
-        text_width = text_bbox[2] - text_bbox[0]
-        text_height = text_bbox[3] - text_bbox[1]
-        text_origin = (c1[0], c1[1] - text_height if c1[1] - text_height > 0 else c1[1])
-        draw.rectangle(
-            [text_origin, (text_origin[0] + text_width, text_origin[1] + text_height)],
-            fill=color
-        )
-        draw.text(text_origin, label, fill=(255, 255, 255), font=font)
+#     if label:
+#         font = ImageFont.load_default()
+#         text_bbox = draw.textbbox((0, 0), label, font=font)
+#         text_width = text_bbox[2] - text_bbox[0]
+#         text_height = text_bbox[3] - text_bbox[1]
+#         text_origin = (c1[0], c1[1] - text_height if c1[1] - text_height > 0 else c1[1])
+#         draw.rectangle(
+#             [text_origin, (text_origin[0] + text_width, text_origin[1] + text_height)],
+#             fill=color
+#         )
+#         draw.text(text_origin, label, fill=(255, 255, 255), font=font)
 
-    return image
+#     return image
+
+def create_dataset_yaml(path : str):
+    data = {
+        'test': 'images/test',
+        'names': {
+            0: 'persoana',
+        }
+    }
+    with open(path + "/" + 'dataset.yaml', 'w') as file:
+        yaml.dump(data, file, sort_keys=False)
 
 def execute_testing(location, model_path, conf_thres = 0.15, iou_thres = 0.15):
     # Load EdgeTPU delegate
@@ -80,17 +89,25 @@ def execute_testing(location, model_path, conf_thres = 0.15, iou_thres = 0.15):
         nms_result = non_max_suppression_v8(prediction, conf_thres, iou_thres, None, False, max_det=300)
         print("Number of objects found:", nms_result[0].shape[0])
 
-
-        for i in range(nms_result[0].shape[0]):
-            cls_id = int(nms_result[0][i][5])
-            conf = int(nms_result[0][i][4] * 100)
-            label = f"{labels[cls_id]} {conf}%"
-            plot_one_box_pil(nms_result[0][i][:4], img, label=label, line_width=2, size=SIZE)
+        with open("res/labels/test/" + filename.replace(".png", ".txt"), "w") as f: 
+            for i in range(nms_result[0].shape[0]):
+                cls_id = str(int(nms_result[0][i][5]))
+                conf = nms_result[0][i][4]
+                if (not np.all(nms_result[0][i][:4] > 0)):
+                    continue
+                c1 = nms_result[0][i][:2]
+                c2 = nms_result[0][i][2:4]
+                width =  np.abs(c2[0] - c1[0])
+                height = np.abs(c2[1] - c1[1])
+                center = c1 + (c2 - c1) / 2 
+                array = np.array([center[0], center[1], width, height, conf])
+                out_str = cls_id + " " + np.array2string(array).replace("]", "").replace("[", "") + "\n"
+                f.write(out_str)
+            
 
         # Save result
-        output_path = "res/drawn-" + filename 
+        output_path = "res/images/test/" + filename 
         img.save(output_path)
-        print(f"Saved result to {output_path}")
     del interpreter
     del delegates
 
@@ -121,4 +138,5 @@ execute_testing(
     location=path,
     model_path=model_path
 )
+create_dataset_yaml("./res")
 
