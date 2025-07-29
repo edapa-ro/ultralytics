@@ -102,6 +102,10 @@ from .transformer import (
     TransformerLayer,
 )
 
+from .custom import (
+    HourglassConv,
+)
+
 __all__ = (
     "Conv",
     "Conv2",
@@ -179,4 +183,5 @@ __all__ = (
     "TorchVision",
     "Index",
     "A2C2f",
+    "HourglassConv",
 )
