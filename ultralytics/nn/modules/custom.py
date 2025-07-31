@@ -31,4 +31,33 @@ class HourglassConv(nn.Module):
             x = m(x) + residuals[-1]
             residuals.pop()
         return x
+
+
+class Downscale(nn.Module):
+    def __init__(self, c, k=3, dwn=[2, 2, 2]):
+        """
+        Initialize Downscale module.
+
+        Args:
+            c (int): Number of channels (input, internal and output).
+            k (int): Kernel size for all convolutions.
+            dwn (list of ints): Factors by which to downscale at each step
+        """
+        super().__init__()
+        self.downs = nn.ModuleList([Conv(c, c, k, factor) for factor in dwn])
+        self.sides = nn.ModuleList([nn.AvgPool2d(factor, factor) for factor in dwn])
+        self.downscale_factor = 1
+        for d in dwn:
+            self.downscale_factor *= d
+    
+    def forward(self, x):
+        residual = torch.zeros((x.shape[0], x.shape[1], x.shape[2]//self.downscale_factor, x.shape[3]//self.downscale_factor), 
+                               dtype=x.dtype, device=x.device)
+        for i, m in enumerate(self.downs):
+            r = x
+            for j in range(i, len(self.sides)):
+                r = self.sides[j](r)
+            residual += r
+            x=m(x)
+        return x + residual
         

@@ -104,6 +104,7 @@ from .transformer import (
 
 from .custom import (
     HourglassConv,
+    Downscale,
 )
 
 __all__ = (
@@ -184,4 +185,5 @@ __all__ = (
     "Index",
     "A2C2f",
     "HourglassConv",
+    "Downscale",
 )
