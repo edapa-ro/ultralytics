@@ -3,6 +3,14 @@ import torch.nn as nn
 
 from .conv import Conv
 
+def custom_pad(k, s):
+    '''
+    Return padding p such that Dimension_out = Dimension_in/stride.
+
+    Note that this is only possible if 2|(k-s). Returns 0 if k<s.
+    '''
+    return max(0, (k-s)//2)
+
 
 class HourglassConv(nn.Module):
     def __init__(self, c, k=3, dwn=[2, 2, 2], skip=0):
@@ -44,7 +52,7 @@ class Downscale(nn.Module):
             dwn (list of ints): Factors by which to downscale at each step
         """
         super().__init__()
-        self.downs = nn.ModuleList([Conv(c, c, k, factor) for factor in dwn])
+        self.downs = nn.ModuleList([Conv(c, c, k, factor, custom_pad(k, factor)) for factor in dwn])
         self.sides = nn.ModuleList([nn.AvgPool2d(factor, factor) for factor in dwn])
         self.downscale_factor = 1
         for d in dwn:
