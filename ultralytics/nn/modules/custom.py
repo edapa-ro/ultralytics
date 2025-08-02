@@ -5,11 +5,17 @@ from .conv import Conv
 
 def custom_pad(k, s):
     '''
-    Return padding p such that Dimension_out = Dimension_in/stride.
+    Return padding p such that dim_out = dim_in/stride.
 
-    Note that this is only possible if 2|(k-s). Returns 0 if k<s.
+    This holds unless k-s<0 (in which case None is returned) or (k-s)%2==1 and dim_in%s==s-1, 
+    in which case dim_out will be (dim_in+1)/s
     '''
-    return max(0, (k-s)//2)
+    if k-s<0:
+        return None
+    if k-s % 2 == 0:
+        return (k-s)//2
+    else:
+        return (k-s+1)//2
 
 
 class HourglassConv(nn.Module):
