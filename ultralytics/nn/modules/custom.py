@@ -12,10 +12,7 @@ def custom_pad(k, s):
     '''
     if k-s<0:
         return None
-    if k-s % 2 == 0:
-        return (k-s)//2
-    else:
-        return (k-s+1)//2
+    return (k-s + (k-s)%2)//2
 
 
 class HourglassConv(nn.Module):
