@@ -1694,8 +1694,11 @@ def parse_model(d, ch, verbose=True):
                 n = 1
             if m is C3k2:  # for M/L/X sizes
                 legacy = False
-                if scale in "mlx":
-                    args[3] = True
+                try: # scale may not be defined for custom files
+                    if scale in "mlx":
+                        args[3] = True
+                except:
+                    pass
             if m is A2C2f:
                 legacy = False
                 if scale in "lx":  # for L/X sizes

@@ -29,7 +29,7 @@ class HourglassConv(nn.Module):
         assert skip<=len(dwn)
         super().__init__()
         self.skip=skip
-        self.downs = nn.ModuleList([Conv(c, c, k, factor) for factor in dwn])
+        self.downs = nn.ModuleList([Conv(c, c, k, factor, custom_pad(k, factor)) for factor in dwn])
         self.ups = nn.ModuleList([nn.Upsample(scale_factor=dwn[len(dwn)-i-1], mode='nearest') for i in range(len(dwn)-skip)])
     
     def forward(self, x):
