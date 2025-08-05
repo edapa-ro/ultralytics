@@ -45,7 +45,7 @@ class HourglassConv(nn.Module):
 
 
 class Downscale(nn.Module):
-    def __init__(self, c, k=3, dwn=[2, 2, 2]):
+    def __init__(self, c, k=3, dwn=[2, 2, 2], pooling='avg'):
         """
         Initialize Downscale module.
 
@@ -53,10 +53,15 @@ class Downscale(nn.Module):
             c (int): Number of channels (input, internal and output).
             k (int): Kernel size for all convolutions.
             dwn (list of ints): Factors by which to downscale at each step
+            pooling ('avg' or 'max'): type of pooling to use. default avg
         """
         super().__init__()
+        if pooling == 'max':
+            pool = nn.MaxPool2d
+        else:
+            pool = nn.AvgPool2d
         self.downs = nn.ModuleList([Conv(c, c, k, factor, custom_pad(k, factor)) for factor in dwn])
-        self.sides = nn.ModuleList([nn.AvgPool2d(factor, factor) for factor in dwn])
+        self.sides = nn.ModuleList([pool(factor, factor) for factor in dwn])
         self.downscale_factor = 1
         for d in dwn:
             self.downscale_factor *= d
