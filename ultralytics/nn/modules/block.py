@@ -2047,7 +2047,7 @@ class CSP1(nn.Module):
         self.concat = Concat(dimension=1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        print("CSP1", self.c2, x.shape)
+        # print("CSP1", self.c2, x.shape)
         list_x = self.concat([self.conv_up(self.m(self.cv1(x))), self.conv_down(x)])
         return self.cv3(self.conv_total(list_x))
 
@@ -2066,7 +2066,7 @@ class CSP2(nn.Module):
         self.concat = Concat(dimension=1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        print("CSP2", self.c2, x.shape)
+        # print("CSP2", self.c2, x.shape)
         list_x = [self.conv_up(self.cv2(self.cv1(x))), self.conv_down(x)]
         return self.cv3(self.conv_total(self.concat(list_x)))
     
@@ -2131,7 +2131,7 @@ class AAM(nn.Module):
         self.average = torch.nn.AvgPool2d(kernel_size=3, stride=1, padding=1)
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        print("AAM", self.c2, x.shape)
+        # print("AAM", self.c2, x.shape)
         return self.average(self.convd3(x) + self.convd5(x) + self.convd7(x))
     
 class Debug_Conv(nn.Module):
@@ -2144,7 +2144,7 @@ class Debug_Conv(nn.Module):
         self.act = self.default_act if act is True else act if isinstance(act, nn.Module) else nn.Identity()
 
     def forward(self, x):
-        print("Debug Conv", self.c2, x.shape)
+        # print("Debug Conv", self.c2, x.shape)
         return self.act(self.bn(self.conv(x)))
 
     def forward_fuse(self, x):
@@ -2156,8 +2156,8 @@ class Debug_Concat(nn.Module):
         self.d = dimension
 
     def forward(self, x: List[torch.Tensor]):
-        print("concat ", end=" ")
-        for t in x:
-            print(t.shape, end=" ")
-        print()
+        # print("concat ", end=" ")
+        # for t in x:
+        #     print(t.shape, end=" ")
+    # print()
         return torch.cat(x, self.d)

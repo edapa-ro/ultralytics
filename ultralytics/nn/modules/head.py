@@ -113,10 +113,10 @@ class Detect(nn.Module):
 
     def forward(self, x: List[torch.Tensor]) -> Union[List[torch.Tensor], Tuple]:
 
-        print("detect ", end=" ")
-        for t in x:
-            print(t.shape, end=" ")
-        print(end="\n\n\n")
+        # print("detect ", end=" ")
+        # for t in x:
+        #     print(t.shape, end=" ")
+        # print(end="\n\n\n")
 
         if self.end2end:
             return self.forward_end2end(x)
