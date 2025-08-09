@@ -1,6 +1,6 @@
 import time
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 import tensorflow as tf
 from pycoral.utils import edgetpu
 import tflite_runtime.interpreter as tflite

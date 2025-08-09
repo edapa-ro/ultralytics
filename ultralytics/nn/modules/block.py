@@ -2061,8 +2061,8 @@ class CSP2(nn.Module):
         self.cv2 = Conv(c1=c_, c2=c_, k=1, s=1, g=g)
         self.conv_up = Conv(c1=c_, c2=c_, k=3, s=1)
         self.conv_down = Conv(c1=c1, c2=c_, k=3, s=1)
-        self.conv_total = Conv(c1=2 *c_, c2= 2*c_, k=3, s=1)
-        self.cv3 = Conv(c1=2 * c_, c2=c2, k=1, s=1, g=g)
+        self.conv_total = Conv(c1=2 *c_, c2=c2, k=3, s=1)
+        self.cv3 = Conv(c1=c2, c2=c2, k=1, s=1, g=g)
         self.concat = Concat(dimension=1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

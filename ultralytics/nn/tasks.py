@@ -1681,7 +1681,7 @@ def parse_model(d, ch, verbose=True):
         }
     )
     for i, (f, n, m, args) in enumerate(d["backbone"] + d["head"]):  # from, number, module, args
-        print(f, n, m, args, width)
+        # print(f, n, m, args, width)
         m = (
             getattr(torch.nn, m[3:])
             if "nn." in m
