@@ -76,4 +76,59 @@ class Downscale(nn.Module):
             residual += r
             x=m(x)
         return x + residual
-        
+
+
+class DenseBlock(nn.Module):
+    def __init__(self, ch, k=3, depth=4, growth=16, bottleneck=False, bottleneck_factor=4.0):
+        """
+        Initialize DenseBlock module.
+
+        Args:
+            ch (int): input channel count
+            k (int or tuple(int, int)): kernel size
+            depth (int): internal layer count
+            growth (int): growth factor. the final output will have ch+depth*growth features
+            bottleneck (bool): whether or not to use 1x1 convolutions as bottlenecks before internal layers
+            bottleneck_factor (float): if bottleneck is True, 
+                each bottleneck convolution will produce growth*bottleneck_factor features
+        """
+        super().__init__()
+        self.layers = nn.ModuleList(Conv(ch+d*growth, growth, k) if not bottleneck 
+                                    else nn.Sequential(Conv(ch+d*growth, int(growth*bottleneck_factor), 1), 
+                                                       Conv(int(growth*bottleneck_factor), growth, k))
+                                    for d in range(depth))
+    
+    def forward(self, x):
+        for m in self.layers:
+            x = torch.concat([x, m(x)], 1)
+        return x
+    
+    def get_output_ch_count(ch, k=3, depth=4, growth=16, bottleneck=False, bottleneck_factor=4.0):
+        """
+        Return the number of output channels from init args.
+        """
+        return ch + depth*growth
+
+
+class CSPBlock(nn.Module):
+    def __init__(self, c1, c2, kdense=3, ktrans=3, depth=4, growth=16, bottleneck=False, bottleneck_factor=4.0):
+        """
+        Initialize Fusion First CSPBlock module.
+
+        Args:
+            c1 (int): input channel count
+            c2 (int): output channel count
+            k (int or tuple(int, int)): kernel size
+            depth (int): internal layer count
+            growth (int): growth factor. the final output will have ch+depth*growth features
+            bottleneck (bool): whether or not to use 1x1 convolutions as bottlenecks before internal layers
+            bottleneck_factor (float): if bottleneck is True, 
+                each bottleneck convolution will produce growth*bottleneck_factor features
+        """
+        super().__init__()
+        self.dense = DenseBlock(c1//2+c1%2, kdense, depth, growth, bottleneck, bottleneck_factor)
+        self.transition = Conv(c1+growth*depth, c2, ktrans)
+    
+    def forward(self, x):
+        x0, x1 = torch.chunk(x, 2, 1)
+        return self.transition( torch.concat((self.dense(x0), x1), 1) )

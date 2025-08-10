@@ -71,6 +71,8 @@ from ultralytics.nn.modules import (
     HourglassConv,
     Downscale,
     CBAM,
+    DenseBlock,
+    CSPBlock,
 )
 from ultralytics.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, YAML, colorstr, emojis
 from ultralytics.utils.checks import check_requirements, check_suffix, check_yaml
@@ -1740,9 +1742,16 @@ def parse_model(d, ch, verbose=True):
             c2 = args[0]
             c1 = ch[f]
             args = [*args[1:]]
-        elif m in frozenset({HourglassConv, Downscale, CBAM}):
+        # custom(ly added) modules:
+        elif m in frozenset({HourglassConv, Downscale, CBAM, DenseBlock}):
             c2 = ch[f]
             args = [c2, *args]
+            if m is DenseBlock:
+                c2 = DenseBlock.get_output_ch_count(*args)
+        elif m is CSPBlock:
+            c2 = args[0]
+            args = [ch[f], *args]
+        # default:
         else:
             c2 = ch[f]
 

@@ -105,6 +105,8 @@ from .transformer import (
 from .custom import (
     HourglassConv,
     Downscale,
+    DenseBlock,
+    CSPBlock,
 )
 
 __all__ = (
