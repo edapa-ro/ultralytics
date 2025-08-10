@@ -12,22 +12,29 @@ echo "deb [signed-by=/usr/share/keyrings/coral-edgetpu-archive-keyring.gpg] http
 apt-get update
 apt-get install -y edgetpu-compiler
 
+
+# First environment for training and exporting
 curl https://pyenv.run | bash
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init --path)"
-eval "$(pyenv init -)"
+eval "$(pyenv init --bash)"
 pyenv install 3.9.17
-
-# First environment for training and exporting
 pyenv shell 3.9.17
 python3 -m venv venv
 source venv/bin/activate
 pip3 install -r requirements.txt
 pip3 install ultralytics
+pip3 install tensorboard
 yolo settings tensorboard=True
 yolo settings datasets_dir=./datasets weights_dir=./weights runs_dir=./runs
 deactivate
+
+
+mkdir datasets
+mv downtownwest2.zip
+unzip datasets/downtownwest2.zip 
+mv datasets/my_dataset datasets/downtest
 
 # Second environment for inference
 

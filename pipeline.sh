@@ -38,6 +38,7 @@ if [ ! $? -eq 0 ]; then
     exit 1
 fi
 
+cp ${SAVE_MODEL_PATH}/train/weights/best.pt ${MODEL}
 python3 export.py \
 --size ${SIZE} \
 --data ${DATASET_YAML} \
