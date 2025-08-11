@@ -14,11 +14,13 @@ apt-get install -y edgetpu-compiler
 
 
 # First environment for training and exporting
+set -e
 curl https://pyenv.run | bash
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init --path)"
 eval "$(pyenv init --bash)"
+exec "$SHELL"
 pyenv install 3.9.17
 pyenv shell 3.9.17
 python3 -m venv venv
@@ -30,10 +32,9 @@ yolo settings tensorboard=True
 yolo settings datasets_dir=./datasets weights_dir=./weights runs_dir=./runs
 deactivate
 
-
 mkdir datasets
-mv downtownwest2.zip
-unzip datasets/downtownwest2.zip 
+mv downtownwest2.zip datasets/
+unzip datasets/downtownwest2.zip -d datasets/ 
 mv datasets/my_dataset datasets/downtest
 
 # Second environment for inference
