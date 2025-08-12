@@ -110,10 +110,10 @@ class DenseBlock(nn.Module):
         return ch + depth*growth
 
 
-class CSPBlock(nn.Module):
+class DenseCSP(nn.Module):
     def __init__(self, c1, c2, kdense=3, ktrans=3, depth=4, growth=16, bottleneck=False, bottleneck_factor=4.0):
         """
-        Initialize Fusion First CSPBlock module.
+        Initialize Fusion First DenseCSP module.
 
         Args:
             c1 (int): input channel count

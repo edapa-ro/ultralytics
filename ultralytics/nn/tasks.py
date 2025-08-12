@@ -72,7 +72,7 @@ from ultralytics.nn.modules import (
     Downscale,
     CBAM,
     DenseBlock,
-    CSPBlock,
+    DenseCSP,
     ProperCBAM,
 )
 from ultralytics.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, YAML, colorstr, emojis
@@ -1749,7 +1749,7 @@ def parse_model(d, ch, verbose=True):
             args = [c2, *args]
             if m is DenseBlock:
                 c2 = DenseBlock.get_output_ch_count(*args)
-        elif m is CSPBlock:
+        elif m is DenseCSP:
             c2 = args[0]
             args = [ch[f], *args]
         # default:
