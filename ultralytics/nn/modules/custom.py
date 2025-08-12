@@ -198,7 +198,7 @@ class ProperCBAM(nn.Module):
 
 # for testing the structural benefits of modules
 class ConvSequence(nn.Module):
-    def __init__(self, c1, c2, count, k=3, s=1, p=0):
+    def __init__(self, c1, c2, count, k=3, s=1, p=None):
         """
         Initialize RepeatConv module (stacked Convs).
 
@@ -211,6 +211,8 @@ class ConvSequence(nn.Module):
             p (int): padding
         """
         super().__init__()
+        if p is None:
+            p = custom_pad(k, s)
         self.seq = nn.Sequential(*[Conv(c1, c1, k, s, p) if i<count-1 else Conv(c1, c2, k, s, p) for i in range(count)])
     
     def forward(self, x):
