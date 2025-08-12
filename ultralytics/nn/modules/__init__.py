@@ -110,6 +110,7 @@ from .custom import (
     ProperChannelAttention,
     ProperSpatialAttention,
     ProperCBAM,
+    ConvSequence,
 )
 
 __all__ = (
@@ -196,4 +197,5 @@ __all__ = (
     "ProperChannelAttention",
     "ProperSpatialAttention",
     "ProperCBAM",
+    "ConvSequence",
 )

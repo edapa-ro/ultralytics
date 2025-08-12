@@ -194,3 +194,24 @@ class ProperCBAM(nn.Module):
     
     def forward(self, x):
         return self.spatt(self.chatt(x))
+
+
+# for testing the structural benefits of modules
+class ConvSequence(nn.Module):
+    def __init__(self, c1, c2, count, k=3, s=1, p=0):
+        """
+        Initialize RepeatConv module (stacked Convs).
+
+        Args:
+            c1 (int): input channels
+            c2 (int): output channels (for last Conv)
+            count (int): number of Convs
+            k (int): kernel size
+            s (int): stride
+            p (int): padding
+        """
+        super().__init__()
+        self.seq = nn.Sequential(*[Conv(c1, c1, k, s, p) if i<count-1 else Conv(c1, c2, k, s, p) for i in range(count)])
+    
+    def forward(self, x):
+        return self.seq(x)
