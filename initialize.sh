@@ -15,11 +15,16 @@ echo "AM AJUNS PANA AICI AM INSTALAT ELEMENTELE DE BAZA"
 
 # First environment for training and exporting
 
-curl https://pyenv.run | bash
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init --path)"
-eval "$(pyenv init --bash)"
+curl -fsSL https://pyenv.run | bash
+echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+echo '[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+echo 'eval "$(pyenv init - bash)"' >> ~/.bashrc
+echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.profile
+echo '[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.profile
+echo 'eval "$(pyenv init - bash)"' >> ~/.profile
+source ~/.bashrc
+source ~/.profile
+# exec "$SHELL"
 pyenv install 3.9.17
 pyenv shell 3.9.17
 echo "AM INSTALAT PYENV CU SUCCES"
@@ -30,6 +35,8 @@ pip3 install ultralytics
 pip3 install tensorboard
 yolo settings tensorboard=True
 yolo settings datasets_dir=./datasets weights_dir=./weights runs_dir=./runs
+pip uninstall torch torchvision torchaudio
+pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128
 echo "AM CREEAT ENVIRONMENT_UL"
 deactivate
 
