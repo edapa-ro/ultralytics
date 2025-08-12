@@ -1,5 +1,5 @@
 #! /bin/bash
-
+set -e
 apt-get update
 apt-get install -y make build-essential libssl-dev zlib1g-dev \
 libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev \
@@ -11,18 +11,18 @@ echo "deb [signed-by=/usr/share/keyrings/coral-edgetpu-archive-keyring.gpg] http
   > /etc/apt/sources.list.d/coral-edgetpu.list
 apt-get update
 apt-get install -y edgetpu-compiler
-
+echo "AM AJUNS PANA AICI AM INSTALAT ELEMENTELE DE BAZA"
 
 # First environment for training and exporting
-set -e
+
 curl https://pyenv.run | bash
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init --path)"
 eval "$(pyenv init --bash)"
-exec "$SHELL"
 pyenv install 3.9.17
 pyenv shell 3.9.17
+echo "AM INSTALAT PYENV CU SUCCES"
 python3 -m venv venv
 source venv/bin/activate
 pip3 install -r requirements.txt
@@ -30,7 +30,9 @@ pip3 install ultralytics
 pip3 install tensorboard
 yolo settings tensorboard=True
 yolo settings datasets_dir=./datasets weights_dir=./weights runs_dir=./runs
+echo "AM CREEAT ENVIRONMENT_UL"
 deactivate
+
 
 mkdir datasets
 mv downtownwest2.zip datasets/
