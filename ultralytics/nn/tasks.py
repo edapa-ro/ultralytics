@@ -73,6 +73,7 @@ from ultralytics.nn.modules import (
     CBAM,
     DenseBlock,
     CSPBlock,
+    ProperCBAM,
 )
 from ultralytics.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, YAML, colorstr, emojis
 from ultralytics.utils.checks import check_requirements, check_suffix, check_yaml
@@ -1743,7 +1744,7 @@ def parse_model(d, ch, verbose=True):
             c1 = ch[f]
             args = [*args[1:]]
         # custom(ly added) modules:
-        elif m in frozenset({HourglassConv, Downscale, CBAM, DenseBlock}):
+        elif m in frozenset({HourglassConv, Downscale, CBAM, ProperCBAM, DenseBlock}):
             c2 = ch[f]
             args = [c2, *args]
             if m is DenseBlock:

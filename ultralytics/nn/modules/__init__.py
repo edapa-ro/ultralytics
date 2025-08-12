@@ -107,6 +107,9 @@ from .custom import (
     Downscale,
     DenseBlock,
     CSPBlock,
+    ProperChannelAttention,
+    ProperSpatialAttention,
+    ProperCBAM,
 )
 
 __all__ = (
@@ -188,4 +191,9 @@ __all__ = (
     "A2C2f",
     "HourglassConv",
     "Downscale",
+    "DenseBlock",
+    "CSPBlock",
+    "ProperChannelAttention",
+    "ProperSpatialAttention",
+    "ProperCBAM",
 )

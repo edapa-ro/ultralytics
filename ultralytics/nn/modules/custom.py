@@ -132,3 +132,65 @@ class CSPBlock(nn.Module):
     def forward(self, x):
         x0, x1 = torch.chunk(x, 2, 1)
         return self.transition( torch.concat((self.dense(x0), x1), 1) )
+
+
+class ProperChannelAttention(nn.Module):
+    def __init__(self, ch, use_mlp=True, r=16.0):
+        """
+        Initialize ChannelAttention module with both AvgPooling and MaxPooling, as well as an MLP option.
+
+        Args:
+            ch (int): input channel count
+            use_mlp (bool): True to use an MLP with one hidden layer (like in the paper) before the summation,
+                False to use a single layer
+            r (float): reduction ratio. if use_mlp is True, the hidden layer of the mlp will have a size of ch/r.
+        """
+        super().__init__()
+        self.avg = nn.AdaptiveAvgPool2d(1)
+        self.max = nn.AdaptiveMaxPool2d(1)
+        self.m = nn.Sequential(Conv(ch, int(ch/r), 1), nn.Conv2d(int(ch/r), ch, 1)) if use_mlp else nn.Conv2d(ch, ch, 1)
+        self.act = nn.Sigmoid()
+    
+    def forward(self, x):
+        return x * self.act( self.m(self.avg(x)) + self.m(self.max(x)) )
+
+
+class ProperSpatialAttention(nn.Module):
+    def __init__(self, k=7):
+        """
+        Initialize a Spatial Attention module that can (hopefully) be compiled for Coral EdgeTPU.
+
+        Args:
+            k (int): kernel size
+        """
+        super().__init__()
+        self.conv = nn.Conv2d(2, 1, k, 1, custom_pad(k, 1))
+        self.act = nn.Sigmoid()
+    
+    def forward(self, x):
+        att = self.act(self.conv(torch.concat((torch.mean(x, 1, True), torch.max(x, 1, True)[0]), 1)))
+        # this is probably terrible for performance, but it should be compilable for Coral EdgeTPU
+        return x * torch.concat([att for _ in range(x.shape[1])], 1)
+        # return x * att.expand(x.shape)
+
+
+class ProperCBAM(nn.Module):
+    def __init__(self, ch, k=7, use_mlp=False, r=4.0):
+        """
+        Initialize a CBAM module with both avgpool and maxpool (as well as an MLP option) in ChannelAttention and
+        with a Coral EdgeTPU-compilable SpatialAttention.
+
+        Args:
+            ch (int): input channel count (for ChannelAttention)
+            k (int): kernel size for SpatialAttention
+            use_mlp (bool): for ChannelAttention: True to use an MLP with one hidden layer (like in the paper)
+                before the summation, False to use a single layer
+            r (float): for ChannelAttention: reduction ratio.
+                if use_mlp is True, the hidden layer of the mlp will have a size of ch/r.
+        """
+        super().__init__()
+        self.chatt=ProperChannelAttention(ch, use_mlp, r)
+        self.spatt=ProperSpatialAttention(k)
+    
+    def forward(self, x):
+        return self.spatt(self.chatt(x))
