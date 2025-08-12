@@ -30,7 +30,7 @@ backbone:
   - [-1, 1, GhostConv, [1024, 3, 2]] # 7-P5/32
 
   - [-1, 9, C2f, [1024]]
-  - [-1, 1, SPPF, [1024, 5]] # 9
+  - [-1, 1, SPPF,[1024, 5]] # 9
 # 13 straturi cu indexare 0
 head:
   - [-1, 1, GhostConv, [512, 1, 1]]

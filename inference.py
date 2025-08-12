@@ -44,7 +44,7 @@ def save_file_label_yolo_format(img :np.array, nms_result : np.array, filename :
     img.save("res/images/test/" + filename)
 
 
-def execute_testing(location, model_path, conf_thres = 0.49, iou_thres = 0.35):
+def execute_testing(location, model_path, conf_thres = 0.20, iou_thres = 0.35):
     # Load EdgeTPU delegate
     delegates = [edgetpu.load_edgetpu_delegate()]
     interpreter = tflite.Interpreter(model_path=model_path, experimental_delegates=delegates)

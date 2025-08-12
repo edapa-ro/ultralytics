@@ -24,12 +24,12 @@ echo '[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.pro
 echo 'eval "$(pyenv init - bash)"' >> ~/.profile
 source ~/.bashrc
 source ~/.profile
-# exec "$SHELL"
-pyenv install 3.9.17
-pyenv shell 3.9.17
+pyenv install 3.11.1
+pyenv shell 3.1.11
 echo "AM INSTALAT PYENV CU SUCCES"
 python3 -m venv venv
 source venv/bin/activate
+pip install --upgrade pip
 pip3 install -r requirements.txt
 pip3 install ultralytics
 pip3 install tensorboard
