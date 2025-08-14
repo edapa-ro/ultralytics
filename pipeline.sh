@@ -36,7 +36,6 @@ python3 export.py \
 --model ${MODEL}
 deactivate
 
-source inference_venv/bin/activate
 edgetpu_compiler -s ${SAVE_MODEL_PATH}/${MODEL_NAME}_full_integer_quant.tflite
 mv ${MODEL_NAME}.onnx ${MODEL_NAME}_full_integer_quant_edgetpu.log  ${MODEL_NAME}_full_integer_quant_edgetpu.tflite ${SAVE_MODEL_PATH}
 
@@ -48,13 +47,14 @@ rm -r ${SAVE_MODEL_PATH}/train/weights/epoch*.pt
 mv ${SAVE_MODEL_PATH}/train/weights/best.pt ${SAVE_MODEL_PATH}/${MODEL}
 zip -r archive_${SAVE_MODEL_PATH}.zip ${SAVE_MODEL_PATH}
 
+source inference_venv/bin/activate
 python3 inference.py \
 --model ${SAVE_MODEL_PATH}/${MODEL_NAME}_full_integer_quant_edgetpu.tflite \
 --data ${DATASET_YAML}
 deactivate
 
-# source venv/bin/activate
-# python3 visualize.py \
-# --data "./datasets/downtest/" \
-# --labels "./res/labels/test/"
-# deactivate
+source venv/bin/activate
+python3 visualize.py \
+--data "./datasets/downtest/" \
+--labels "./res/labels/test/"
+deactivate
