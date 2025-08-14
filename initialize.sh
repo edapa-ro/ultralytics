@@ -25,7 +25,7 @@ echo 'eval "$(pyenv init - bash)"' >> ~/.profile
 source ~/.bashrc
 source ~/.profile
 pyenv install 3.11.1
-pyenv shell 3.1.11
+pyenv shell 3.11.1
 echo "AM INSTALAT PYENV CU SUCCES"
 python3 -m venv venv
 source venv/bin/activate
