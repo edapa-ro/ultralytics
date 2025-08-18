@@ -45,14 +45,16 @@ if (model == None):
     print("NU S-A PUTUT INITIALIZA MODELUL\n")
     exit(1)
 
+print(size)
 print("SE INCEPE ACUM ANTRENAREA")
 model.train(
     data=data_yaml,
     epochs=3,
     imgsz=size,
+    rect=False,
     batch=8,
-    save_period=1,
+    save_period=3,
     model=model,
     resume=False,
-    verbose=False
+    verbose=False,
 )
