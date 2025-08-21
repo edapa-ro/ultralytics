@@ -3,15 +3,7 @@ import fiftyone as fo
 import os 
 
 
-def load_combined_dataset(dataset_dir : str, predictions_dir : str):
-    dataset = fo.Dataset("downtest_combined")
-    dataset.add_dir(
-        dataset_dir=dataset_dir,
-        dataset_type=fo.types.YOLOv5Dataset,
-        split="test",
-        tags="groundtruth",
-        label_field="ground_truth"
-    )
+def load_combined_dataset(dataset : fo.Dataset, predictions_dir : str):
     for sample in dataset:
         filename = os.path.basename(sample.filepath).replace(".png", ".txt")
         with open(os.path.join(predictions_dir, filename), "r") as f:
@@ -28,10 +20,6 @@ def load_combined_dataset(dataset_dir : str, predictions_dir : str):
                  ))
             sample["predictions"] = fo.Detections(detections=detections)
         sample.save()
-
-    fo.pprint(dataset.stats(include_media=True))
-    session = fo.launch_app(dataset)
-    session.wait()
 
 
 parser = argparse.ArgumentParser()
@@ -58,5 +46,18 @@ if (not os.path.isdir(label_path)):
 
 # dataset_dir = "./datasets/downtest/"
 #     predictions_dir = "./res/labels/test/"
-load_combined_dataset(dataset_dir=data_path, predictions_dir=label_path)
+
+dataset = fo.Dataset("downtest_combined")
+dataset.add_dir(
+    dataset_dir=data_path,
+    dataset_type=fo.types.YOLOv5Dataset,
+    split="test",
+    tags="groundtruth",
+    label_field="ground_truth"
+)
+
+load_combined_dataset(dataset, predictions_dir=label_path)
+fo.pprint(dataset.stats(include_media=True))
+session = fo.launch_app(dataset)
+session.wait()
 

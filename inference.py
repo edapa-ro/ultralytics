@@ -16,18 +16,8 @@ if (len(list_edge_tpus()) == 0):
 print(list_edge_tpus())
 SIZE=1024
 
-def create_dataset_yaml(path : str):
-    data = {
-        'test': 'images/test',
-        'names': {
-            0: 'persoana',
-        }
-    }
-    with open(path + "/" + 'dataset.yaml', 'w') as file:
-        yaml.dump(data, file, sort_keys=False)
-
-def save_file_label_yolo_format(img :np.array, nms_result : np.array, filename : str):
-    with open("res/labels/test/" + filename.replace(".png", ".txt"), "w") as f: 
+def save_file_label_yolo_format(img :np.array, nms_result : np.array, filename : str, save_dir):
+    with open(save_dir + "/" + filename.replace(".png", ".txt"), "w") as f: 
             for i in range(nms_result[0].shape[0]):
                 cls_id = str(int(nms_result[0][i][5]))
                 conf = nms_result[0][i][4]
@@ -41,10 +31,10 @@ def save_file_label_yolo_format(img :np.array, nms_result : np.array, filename :
                 array = np.array([center[0], center[1], width, height, conf])
                 out_str = cls_id + " " + np.array2string(array).replace("]", "").replace("[", "") + "\n"
                 f.write(out_str) 
-    img.save("res/images/test/" + filename)
+    # img.save(save_dir + "/" + filename)
 
 
-def execute_testing(location, model_path, conf_thres = 0.20, iou_thres = 0.35):
+def execute_testing(location, model_path, save_dir, conf_thres = 0.20, iou_thres = 0.35):
     # Load EdgeTPU delegate
     delegates = [edgetpu.load_edgetpu_delegate()]
     interpreter = tflite.Interpreter(model_path=model_path, experimental_delegates=delegates)
@@ -86,8 +76,7 @@ def execute_testing(location, model_path, conf_thres = 0.20, iou_thres = 0.35):
         print("Number of objects found:", nms_result[0].shape[0])
 
         # save_file_label_fiftyone_format(data, img, nms_result, filename)
-        save_file_label_yolo_format(img, nms_result, filename)
-    create_dataset_yaml("./res")
+        save_file_label_yolo_format(img, nms_result, filename,save_dir)
     del interpreter
     del delegates
 
@@ -95,10 +84,13 @@ def execute_testing(location, model_path, conf_thres = 0.20, iou_thres = 0.35):
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model', help='model pt path')
 parser.add_argument('-d', '--data', help='test_data')
+parser.add_argument('-s', '--save', help='save location')
 args = parser.parse_args()
 
 model_path = args.model
 data_yaml = args.data 
+save_dir = args.save
+
 if (model_path == None):
     print("NU A FOST TRANSMIS MODELUL CA PARAMETRU PENTRU INFERENCE")
     exit(1)
@@ -108,6 +100,18 @@ if (not os.path.isfile(model_path)) or (not model_path.endswith(".tflite")):
 if (not os.path.isfile(data_yaml)) or (not data_yaml.endswith(".yaml")):
     print("FISIERUL TRANSMIS PENTRU SETUL DE DATE NU ESTE VALID PENTRU INFERENCE")
     exit(1)
+if save_dir == None:
+    print("NU A FOST TRANSMIS CA PARAMETRU UNDE VA FI SALVAT REZULTATUL")
+    exit(1)
+try:
+    os.mkdir(save_dir)
+    print(f"Directory '{save_dir}' created successfully.")
+except FileExistsError:
+    print(f"Directory '{save_dir}' already exists.")
+except PermissionError:
+    print(f"Permission denied: Unable to create '{save_dir}'.")
+except Exception as e:
+    print(f"An error occurred: {e}")
 
 with open(data_yaml, 'r') as f:
     data = yaml.load(f, Loader=yaml.SafeLoader)
@@ -117,7 +121,8 @@ print(path)
 
 execute_testing(
     location=path,
-    model_path=model_path
+    model_path=model_path,
+    save_dir=save_dir
 )
 
 
