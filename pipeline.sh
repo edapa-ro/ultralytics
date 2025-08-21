@@ -4,6 +4,7 @@ set -e
 YAML=$1
 SIZE=1024
 
+# DATASET_YAML=ultralytics/cfg/datasets/VisDrone.yaml
 DATASET_YAML=ultralytics/cfg/datasets/downtest.yaml
 # DATASET_YAML=ultralytics/cfg/datasets/coco8.yaml
 
@@ -36,7 +37,7 @@ python3 export.py \
 --model ${MODEL}
 deactivate
 
-edgetpu_compiler -s ${SAVE_MODEL_PATH}/${MODEL_NAME}_full_integer_quant.tflite
+edgetpu_compiler -sa ${SAVE_MODEL_PATH}/${MODEL_NAME}_full_integer_quant.tflite
 mv ${MODEL_NAME}.onnx ${MODEL_NAME}_full_integer_quant_edgetpu.log  ${MODEL_NAME}_full_integer_quant_edgetpu.tflite ${SAVE_MODEL_PATH}
 
 mv runs/detect/train  ${SAVE_MODEL_PATH}

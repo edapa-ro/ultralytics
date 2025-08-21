@@ -30,13 +30,12 @@ echo "AM INSTALAT PYENV CU SUCCES"
 python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
+pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128
 pip3 install -r requirements.txt
 pip3 install ultralytics
 pip3 install tensorboard
 yolo settings tensorboard=True
 yolo settings datasets_dir=./datasets weights_dir=./weights runs_dir=./runs
-pip uninstall torch torchvision torchaudio
-pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128
 echo "AM CREEAT ENVIRONMENT_UL"
 deactivate
 
