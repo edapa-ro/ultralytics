@@ -1,7 +1,6 @@
 from ultralytics.models import YOLO
 import argparse
 import os
-import re
 from torch.utils.tensorboard import SummaryWriter
 writer = SummaryWriter()
 
@@ -57,5 +56,5 @@ model.train(
     model=model,
     resume=False,
     verbose=False,
-    fraction=0.05,
+    fraction=1.0,
 )
