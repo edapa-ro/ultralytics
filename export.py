@@ -26,5 +26,4 @@ if (not os.path.isfile(data_path) or (not data_path.endswith(".yaml"))):
     exit(1)
 
 model=YOLO(model_path)
-# model.export(format='tflite', int8=True, imgsz=(size, size), dynamic=False, batch=1, data=data_path, fraction=0.6)
-model.export(format='tflite', int8=True, imgsz=(1024, 1024), dynamic=False, batch=1, device=0, data=data_path, fraction=1)
+model.export(format='tflite', int8=True, imgsz=(1024, 1024), dynamic=False, batch=1, device=0, data=data_path, fraction=0.6)

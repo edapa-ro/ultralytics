@@ -57,4 +57,5 @@ model.train(
     model=model,
     resume=False,
     verbose=False,
+    fraction=0.05,
 )
