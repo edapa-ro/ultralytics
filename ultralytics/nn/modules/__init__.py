@@ -107,10 +107,12 @@ from .custom import (
     Downscale,
     DenseBlock,
     DenseCSP,
+    GhostDenseCSP,
     ProperChannelAttention,
     ProperSpatialAttention,
     ProperCBAM,
     ConvSequence,
+    GhostConvSequence,
 )
 
 __all__ = (
@@ -194,8 +196,10 @@ __all__ = (
     "Downscale",
     "DenseBlock",
     "DenseCSP",
+    "GhostDenseCSP",
     "ProperChannelAttention",
     "ProperSpatialAttention",
     "ProperCBAM",
     "ConvSequence",
+    "GhostConvSequence",
 )

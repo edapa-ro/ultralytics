@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from .conv import Conv
+from .conv import Conv, GhostConv
 
 def custom_pad(k, s):
     '''
@@ -134,6 +134,25 @@ class DenseCSP(nn.Module):
         return self.transition( torch.concat((self.dense(x0), x1), 1) )
 
 
+class GhostDenseCSP(DenseCSP):
+    def __init__(self, c1, c2, kdense=3, ktrans=3, depth=4, growth=16, bottleneck=False, bottleneck_factor=4.0):
+        """
+        Initialize Fusion First GhostDenseCSP module (DenseCSP with GhostConv transition).
+
+        Args:
+            c1 (int): input channel count
+            c2 (int): output channel count
+            k (int or tuple(int, int)): kernel size
+            depth (int): internal layer count
+            growth (int): growth factor. the final output will have ch+depth*growth features
+            bottleneck (bool): whether or not to use 1x1 convolutions as bottlenecks before internal layers
+            bottleneck_factor (float): if bottleneck is True, 
+                each bottleneck convolution will produce growth*bottleneck_factor features
+        """
+        super().__init__(c1, c2, kdense, ktrans, depth, growth, bottleneck, bottleneck_factor)
+        self.transition = GhostConv(c1+growth*depth, c2, ktrans)
+
+
 class ProperChannelAttention(nn.Module):
     def __init__(self, ch, use_mlp=True, r=16.0):
         """
@@ -200,7 +219,7 @@ class ProperCBAM(nn.Module):
 class ConvSequence(nn.Module):
     def __init__(self, c1, c2, count, k=3, s=1, p=None):
         """
-        Initialize RepeatConv module (stacked Convs).
+        Initialize ConvSequence module (stacked Convs).
 
         Args:
             c1 (int): input channels
@@ -214,6 +233,27 @@ class ConvSequence(nn.Module):
         if p is None:
             p = custom_pad(k, s)
         self.seq = nn.Sequential(*[Conv(c1, c1, k, s, p) if i<count-1 else Conv(c1, c2, k, s, p) for i in range(count)])
+    
+    def forward(self, x):
+        return self.seq(x)
+
+class GhostConvSequence(nn.Module):
+    def __init__(self, c1, c2, count, k=3, s=1, p=None):
+        """
+        Initialize GhostConvSequence module (stacked GhostConvs).
+
+        Args:
+            c1 (int): input channels
+            c2 (int): output channels (for last Conv)
+            count (int): number of Convs
+            k (int): kernel size
+            s (int): stride
+            p (int): padding
+        """
+        super().__init__()
+        if p is None:
+            p = custom_pad(k, s)
+        self.seq = nn.Sequential(*[GhostConv(c1, c1, k, s, p) if i<count-1 else GhostConv(c1, c2, k, s, p) for i in range(count)])
     
     def forward(self, x):
         return self.seq(x)
