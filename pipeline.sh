@@ -1,5 +1,6 @@
 #! /bin/bash
 
+# https://github.com/google-coral/webcoral.git
 set -e
 YAML=$1
 SIZE=1024
