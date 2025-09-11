@@ -22,8 +22,8 @@ backbone:
   - [-1, 9, C2f, [256]] # 8
   - [-1, 1, GhostConv, [512, 3, 2]] # 9  4, 4
 
-  - [-1, 9, C2f, [256]] # 10
-  - [-1, 1, GhostConv, [512, 3, 2]] #  11  2, 2
+  - [-1, 9, C2f, [512]] # 10 # schimbat de 256 in 512 !!!!!
+  - [-1, 1, GhostConv, [1024, 3, 2]] #  11  2, 2
 
   - [-1, 9, C2f, [1024]] # 12
   - [-1, 1, SPPF,[1024, 5]] # 13
@@ -40,17 +40,17 @@ head:
   - [[-1, 8], 1, Concat, [1]]                      # concat with backbone P3
   - [-1, 3, C3Ghost, [256, True]]  # 21            # fused P3_td  (P3 top-down)
 
-  - [-1, 1, GhostConv, [128, 1, 1]]
+  - [-1, 1, GhostConv, [256, 1, 1]]
   - [-1, 1, nn.Upsample, [None, 2, "nearest"]]                
   - [[-1, 6], 1, Concat, [1]]                     
-  - [-1, 3, C3Ghost, [128, True]]  # 24            
-
-  - [-1, 1, GhostConv, [128, 3, 2]]                
-  - [[-1, 8], 1, Concat, [1]]                     
-  - [-1, 3, C3Ghost, [256, True]]  # 27           
+  - [-1, 3, C3Ghost, [256, True]]  # 24            
 
   - [-1, 1, GhostConv, [256, 3, 2]]                
+  - [[-1, 8], 1, Concat, [1]]                     
+  - [-1, 3, C3Ghost, [512, True]]  # 27           
+
+  - [-1, 1, GhostConv, [512, 3, 2]]                
   - [[-1, 10], 1, Concat, [1]]                     
-  - [-1, 3, C3Ghost, [512, True]]  # 30 
+  - [-1, 3, C3Ghost, [1024, True]]  # 30 
 
   - [[24, 27, 30], 1, Detect, [nc]] 
