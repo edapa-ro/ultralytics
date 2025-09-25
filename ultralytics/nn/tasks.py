@@ -72,8 +72,10 @@ from ultralytics.nn.modules import (
     Downscale,
     CBAM,
     DenseBlock,
+    GhostDenseBlock,
     DenseCSP,
     GhostDenseCSP,
+    FullGhostDenseCSP,
     ProperCBAM,
     ConvSequence,
     GhostConvSequence,
@@ -1750,10 +1752,10 @@ def parse_model(d, ch, verbose=True):
         elif m in frozenset({HourglassConv, Downscale, CBAM, ProperCBAM}): # modules that output the inputted channel count
             c2 = ch[f]
             args = [c2, *args]
-        elif m in frozenset({DenseCSP, GhostDenseCSP, ConvSequence, GhostConvSequence}): # modules that output a specified channel count
+        elif m in frozenset({DenseCSP, GhostDenseCSP, FullGhostDenseCSP, ConvSequence, GhostConvSequence}): # modules that output a specified channel count
             c2 = args[0]
             args = [ch[f], *args]
-        elif m is DenseBlock: # special case
+        elif m in frozenset({DenseBlock, GhostDenseBlock}): # special cases
             args = [ch[f], *args]
             c2 = DenseBlock.get_output_ch_count(*args)
         # default:

@@ -110,6 +110,27 @@ class DenseBlock(nn.Module):
         return ch + depth*growth
 
 
+class GhostDenseBlock(DenseBlock):
+    def __init__(self, ch, k=3, depth=4, growth=16, bottleneck=False, bottleneck_factor=4.0):
+        """
+        Initialize GhostDenseBlock module.
+
+        Args:
+            ch (int): input channel count
+            k (int or tuple(int, int)): kernel size
+            depth (int): internal layer count
+            growth (int): growth factor. the final output will have ch+depth*growth features
+            bottleneck (bool): whether or not to use 1x1 convolutions as bottlenecks before internal layers
+            bottleneck_factor (float): if bottleneck is True, 
+                each bottleneck convolution will produce growth*bottleneck_factor features
+        """
+        super().__init__(ch, k, depth, growth, bottleneck, bottleneck_factor)
+        self.layers = nn.ModuleList(GhostConv(ch+d*growth, growth, k) if not bottleneck 
+                                    else nn.Sequential(Conv(ch+d*growth, int(growth*bottleneck_factor), 1), 
+                                                       GhostConv(int(growth*bottleneck_factor), growth, k))
+                                    for d in range(depth))
+
+
 class DenseCSP(nn.Module):
     def __init__(self, c1, c2, kdense=3, ktrans=3, depth=4, growth=16, bottleneck=False, bottleneck_factor=4.0):
         """
@@ -150,6 +171,26 @@ class GhostDenseCSP(DenseCSP):
                 each bottleneck convolution will produce growth*bottleneck_factor features
         """
         super().__init__(c1, c2, kdense, ktrans, depth, growth, bottleneck, bottleneck_factor)
+        self.transition = GhostConv(c1+growth*depth, c2, ktrans)
+
+
+class FullGhostDenseCSP(DenseCSP):
+    def __init__(self, c1, c2, kdense=3, ktrans=3, depth=4, growth=16, bottleneck=False, bottleneck_factor=4.0):
+        """
+        Initialize Fusion First FullGhostDenseCSP module (GhostDenseBlock and GhostConv transition).
+
+        Args:
+            c1 (int): input channel count
+            c2 (int): output channel count
+            k (int or tuple(int, int)): kernel size
+            depth (int): internal layer count
+            growth (int): growth factor. the final output will have ch+depth*growth features
+            bottleneck (bool): whether or not to use 1x1 convolutions as bottlenecks before internal layers
+            bottleneck_factor (float): if bottleneck is True, 
+                each bottleneck convolution will produce growth*bottleneck_factor features
+        """
+        super().__init__(c1, c2, kdense, ktrans, depth, growth, bottleneck, bottleneck_factor)
+        self.dense = GhostDenseBlock(c1//2+c1%2, kdense, depth, growth, bottleneck, bottleneck_factor)
         self.transition = GhostConv(c1+growth*depth, c2, ktrans)
 
 
