@@ -37,13 +37,15 @@ pip3 install tensorboard
 yolo settings tensorboard=True
 yolo settings datasets_dir=./datasets weights_dir=./weights runs_dir=./runs
 echo "AM CREEAT ENVIRONMENT_UL"
-deactivate
 
 
 mkdir datasets
-mv downtownwest2.zip datasets/
-unzip datasets/downtownwest2.zip -d datasets/ 
-mv datasets/my_dataset datasets/downtest
+cd utilitary
+pip3 install gdown pandas pyyaml
+python3 download.py
+cp mydataset/dataset.yaml ../ultralytics/cfg/datasets
+mv mydataset ../datasets
+deactivate
 
 # Second environment for inference
 
