@@ -16,7 +16,7 @@ POSSIBLE_LOCATION_DATA_FOLDER = [
     "test/labels"
 ]
 INTERMEDIARY_ARCHIVES_LOCATION = "archives_data"
-ROOT_DATASET_LOCATION = "dataset"
+ROOT_DATASET_LOCATION = "mydataset"
 
 def get_drive_id(url):
     match = re.search(r'/d/([a-zA-Z0-9_-]+)', url)
@@ -79,6 +79,7 @@ def merge_all_datasets(archives_list : list[tuple[str, str]]):
 
 def create_yaml_file():
     data_yaml = {
+        "path": ROOT_DATASET_LOCATION,
         "train": "train/images",
         "val": "val/images",
         "test": "test/images",
@@ -103,4 +104,5 @@ open_all_archives(archives_list)
 create_file_structure()
 merge_all_datasets(archives_list)
 create_yaml_file()
+
 
