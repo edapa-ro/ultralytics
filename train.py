@@ -1,7 +1,7 @@
 from ultralytics.models import YOLO
 import argparse
 import os
-from torch.utils.tensorboard import SummaryWriter
+from tensorboard import SummaryWriter
 writer = SummaryWriter()
 
 parser = argparse.ArgumentParser()
@@ -48,14 +48,13 @@ print(size)
 print("SE INCEPE ACUM ANTRENAREA")
 model.train(
     data=data_yaml,
-    epochs=2,
+    epochs=200,
     imgsz=size,
     rect=False,
     batch=8,
-    save_period=3,
+    save_period=20,
     model=model,
     resume=False,
     verbose=False,
-    fraction=0.3,
-    patience=30
+    patience=50
 )

@@ -7,7 +7,8 @@ SIZE=1024
 
 # DATASET_YAML=ultralytics/cfg/datasets/VisDrone.yaml
 # DATASET_YAML=ultralytics/cfg/datasets/downtest.yaml
-DATASET_YAML=ultralytics/cfg/datasets/coco.yaml
+# DATASET_YAML=ultralytics/cfg/datasets/coco.yaml
+DATASET_YAML=ultralytics/cfg/datasets/dataset.yaml
 
 MODEL_NAME=$(basename $YAML .yaml)
 SAVE_MODEL_PATH=${MODEL_NAME}_saved_model
