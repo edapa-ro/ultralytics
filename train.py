@@ -1,8 +1,6 @@
 from ultralytics.models import YOLO
 import argparse
 import os
-from tensorboard import SummaryWriter
-writer = SummaryWriter()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-yml', '--yaml', help ='yaml file')
@@ -51,7 +49,7 @@ model.train(
     epochs=200,
     imgsz=size,
     rect=False,
-    batch=8,
+    batch=64,
     save_period=20,
     model=model,
     resume=False,

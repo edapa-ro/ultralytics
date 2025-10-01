@@ -8,6 +8,7 @@ SIZE=1024
 # DATASET_YAML=ultralytics/cfg/datasets/VisDrone.yaml
 # DATASET_YAML=ultralytics/cfg/datasets/downtest.yaml
 # DATASET_YAML=ultralytics/cfg/datasets/coco.yaml
+VALIDATION_DATASET_YAML=ultralytics/cfg/datasets/mystandford.yaml
 DATASET_YAML=ultralytics/cfg/datasets/dataset.yaml
 
 MODEL_NAME=$(basename $YAML .yaml)
@@ -35,6 +36,11 @@ python3 train.py \
 --data ${DATASET_YAML} \
 --yaml ${YAML} \
 --model ${MODEL} 
+
+# python3 validate.py \
+# --size ${SIZE} \
+# --data ${DATASET_YAML} \
+# --model ${MODEL}
 
 cp runs/detect/train/weights/best.pt ${MODEL}
 python3 export.py \
